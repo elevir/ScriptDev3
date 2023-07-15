@@ -232,6 +232,62 @@ struct npc_calvin_montague : public CreatureScript
     }
 };
 
+enum 
+{
+    QUEST_THE_DEATHSTALKERS = 1886,
+    QUEST_THE_DEATHSTALKERS_TEXT_1 = 623,
+    QUEST_THE_DEATHSTALKERS_TEXT_2 = 624
+};
+
+struct npc_astor_hadren : public CreatureScript 
+{
+    npc_astor_hadren() : CreatureScript("npc_astor_hadren") {}
+
+    CreatureAI* GetAI(Creature* pCreature) override
+    {
+        return new ScriptedAI(pCreature);
+    }
+
+    virtual bool OnGossipHello(Player* pPlayer, Creature* pCreature) override 
+    { 
+        if (pPlayer->GetQuestStatus(QUEST_THE_DEATHSTALKERS) != QUEST_STATUS_INCOMPLETE) 
+        {
+            return false;
+        }
+
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "You're Astor Hadren, right?", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+        pPlayer->PlayerTalkClass->SendGossipMenu(QUEST_THE_DEATHSTALKERS_TEXT_1, pCreature->GetGUID());
+        return true;
+    }
+
+    void AttackPlayer(Player* pPlayer, Creature* pCreature)
+    {
+        pCreature->SetFactionTemporary(FACTION_HOSTILE, TEMPFACTION_RESTORE_RESPAWN);
+        if (pCreature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PASSIVE))
+        {
+            pCreature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PASSIVE);
+        }
+        pCreature->AI()->AttackStart(pPlayer);
+    }
+
+    virtual bool OnGossipSelect(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction) override 
+    {
+        pPlayer->PlayerTalkClass->ClearMenus();
+        switch (uiAction) 
+        {
+            case GOSSIP_ACTION_INFO_DEF:
+                pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "You've got something I need, Astor. And I'll be taking it now.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+                pPlayer->PlayerTalkClass->SendGossipMenu(QUEST_THE_DEATHSTALKERS_TEXT_2, pCreature->GetGUID());
+                break;
+            case GOSSIP_ACTION_INFO_DEF + 1:
+                pPlayer->CLOSE_GOSSIP_MENU();
+                AttackPlayer(pPlayer, pCreature);
+                break;
+        }
+        return true;
+    }
+};
+
 void AddSC_tirisfal_glades()
 {
     Script* s;
@@ -240,6 +296,8 @@ void AddSC_tirisfal_glades()
     s = new go_mausoleum_trigger();
     s->RegisterSelf();
     s = new npc_calvin_montague();
+    s->RegisterSelf();
+    s = new npc_astor_hadren();
     s->RegisterSelf();
 
     //pNewScript = new Script;
