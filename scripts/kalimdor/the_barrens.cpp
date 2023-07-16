@@ -1449,6 +1449,39 @@ struct warlord_kromzar : public CreatureScript
     }
 };
 
+enum
+{
+    QUEST_PLUNDERING_THE_PLUNDERERS = 2381,
+    WRENIXS_GIZMOTRONIC_APPARATUS_TEXT = 1041,
+    THIEFS_TOOLS_ITEM = 5060,
+    ECAC_ITEM = 7970,
+};
+
+struct wrenixs_gizmotronic_apparatus : public CreatureScript
+{
+    wrenixs_gizmotronic_apparatus() : CreatureScript("npc_wrenixs_gizmotronic_apparatus") {}
+
+    bool OnGossipHello(Player* pPlayer, Creature* pCreature) override
+    {
+        if (pPlayer->GetQuestStatus(QUEST_PLUNDERING_THE_PLUNDERERS) != QUEST_STATUS_INCOMPLETE)
+        {
+            return false;
+        }
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Give me what I need stupid machine !", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+        pPlayer->PlayerTalkClass->SendGossipMenu(WRENIXS_GIZMOTRONIC_APPARATUS_TEXT, pCreature->GetGUID());
+        return true;
+    }
+
+    bool OnGossipSelect(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction) override
+    {
+        pPlayer->PlayerTalkClass->ClearMenus();
+        pPlayer->PlayerTalkClass->CloseGossip();
+        pPlayer->StoreNewItemInInventorySlot(THIEFS_TOOLS_ITEM, 1);
+        pPlayer->StoreNewItemInInventorySlot(ECAC_ITEM, 1);
+        return true;
+    }
+};
+
 void AddSC_the_barrens()
 {
     Script* s;
@@ -1471,6 +1504,8 @@ void AddSC_the_barrens()
     s = new kolkar_invader();
     s->RegisterSelf();
     s = new warlord_kromzar();
+    s->RegisterSelf();
+    s = new wrenixs_gizmotronic_apparatus();
     s->RegisterSelf();
 
     //pNewScript = new Script;
